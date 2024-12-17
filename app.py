@@ -39,12 +39,19 @@ def config():
 
 def initialize_cache():
     init_cache('messages', [])
-
+    init_cache('old_api_key', '')
 
 def initialize(api_key: str):
     try:
-        store = get_from_cache('memory')
-        if not store:
+        old_api_key = get_from_cache('old_api_key')
+        is_api_key_changed = old_api_key is not None and old_api_key != api_key
+        if is_api_key_changed:
+            st.session_state.clear()
+            st.cache_data.clear()
+            initialize_cache()
+
+        store = get_from_cache('store')
+        if not store or is_api_key_changed:
             logging.info("Loading context and embeddings...")
             text_loader = TextLoader('./documents/document.txt')
             text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -77,7 +84,7 @@ def initialize(api_key: str):
 
 
         llm = get_from_cache('llm')
-        if not llm:
+        if not llm or is_api_key_changed:
             logging.info("Creating llm...")
             llm = ChatOpenAI(
                 model='gpt-4o-mini',
@@ -116,25 +123,27 @@ def ask_something(question: str) -> str | None:
         logging.error('Failed to generate answer...{}'.format(e))
         return None
 
+def on_click_clear():
+    if 'api_key' in st.session_state:
+        set_to_cache('api_key', '')
+        set_to_cache('messages', [])
+    st.cache_data.clear()
 
 def main():
     st.title("Chatgpt challenge day9-11")
 
     with st.sidebar:
-        st.text_input("OPEN_API_KEY. We won't save it", key='api_key')
+        st.text_input("Write your own OPEN_API_KEY. We won't save it", key='api_key')
         col1, col2 = st.columns(2)
-        submit_button = col1.button("Submit", use_container_width=True, )
-        clear_button = col2.button("Clear", use_container_width=True)
+        submit_button = col1.button("Submit", use_container_width=True,)
+        col2.button("Clear", use_container_width=True,
+                                   on_click=on_click_clear)
 
-        if clear_button:
-            st.session_state.clear()
-            st.cache_data.clear()
-            st.toast("Cleared all session data.")
-            st.rerun()
-    api_key = st.session_state.api_key
+
+    api_key = get_from_cache('api_key')
     if api_key:
         initialize(api_key=api_key)
-        st.toast("Successfully initialized", icon='🥰')
+        set_to_cache('old_api_key', api_key)
         st.success('Initialization complete.')
 
         Chat.send_message("I'm ready to answer your question.",
