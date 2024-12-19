@@ -1,6 +1,8 @@
 from typing import Any
 import streamlit as st
 
+# st.session_state를 여러번 사용하는 것은 비효율적이라...
+
 def init_cache(key, default_value=None):
     if key not in st.session_state:
         st.session_state[key] = default_value

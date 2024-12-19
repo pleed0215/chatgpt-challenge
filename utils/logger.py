@@ -3,6 +3,9 @@ import streamlit as st
 
 from utils.st_cache import set_to_cache
 
+# 불운의 로거. streamlit의 session_state와 관련된 업데이트에 문제가 있어서
+# 콘솔로만 출력하고 실지로는 로거를 streamlit에 출력하지 않게 되었다.
+
 class StreamlitLogger(logging.Handler):
     def __init__(self):
         super().__init__()

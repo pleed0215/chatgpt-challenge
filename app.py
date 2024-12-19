@@ -1,6 +1,4 @@
-import logging
 import os
-import sys
 from typing import Any
 
 from langchain.document_loaders import UnstructuredFileLoader
@@ -20,9 +18,11 @@ from utils.logger import logger_factory
 from utils.st_cache import set_to_cache, get_from_cache, init_cache
 from utils.chat_stream import Chat, ChatCallbackHandler
 
+# 전역 변수들.
 CACHE_DIR = './.cache'
 UPLOAD_DIR = './uploads'
 
+# 로직 담당 앱 클래스.
 class App:
     retriever = None
 
@@ -39,6 +39,7 @@ class App:
     ])
 
     def __init__(self):
+        # 반드시 config를 먼저 호출해야 함. set_page_config 때문..
         self.config()
         self.logger = logger_factory("AppLogger")
         self.init_cache()
@@ -51,11 +52,15 @@ class App:
         )
 
 
+    # KeyError에 대비하기 위한 캐시 초기화.
     def init_cache(self):
         init_cache('messages', [])
         init_cache('old_api_key', '')
 
 
+    """
+    chat memory, llm 등의 초기화.
+    """
     def initialize(self, api_key: str):
         try:
             self.logger.info("Initializing...")
@@ -92,6 +97,9 @@ class App:
             st.toast(e, icon='🚨')
             self.logger.error('Failed to initialize langchain stuff...')
 
+    """
+    유저의 질문에 답변을 생성해주는 함수.
+    """
     def ask_something(self, question: str) -> str|None:
         try:
             self.logger.info('Human: %s', question)
@@ -119,6 +127,7 @@ class App:
             self.logger.error('Failed to generate answer...{}'.format(e))
             return None
 
+    # Clear 버튼 click 이벤트 핸들러.
     def on_click_clear(self):
         if 'api_key' in st.session_state:
             set_to_cache('api_key', '')
@@ -129,6 +138,7 @@ class App:
         self.retriever = None
         self.logger.info("Cleared state and cache.")
 
+    # 파일이 업로드 되면, 임베딩 및 벡터 계산결과를 캐시에 저장하고 retriever를 리턴.
     @st.cache_data(show_spinner="Now uploading and embedding your document.")
     def embed_file(_self, uploaded_file: UploadedFile) -> Any:
         api_key = get_from_cache('api_key')
@@ -164,6 +174,7 @@ class App:
             vector_store = FAISS.from_documents(split_docs, cache_backed)
             return vector_store.as_retriever()
 
+    # 메인 로직.
     def run(self):
         st.title("Chatgpt challenge day9-11")
 
@@ -221,6 +232,6 @@ class App:
 
 
 
-
+# App 구동
 app = App()
 app.run()

@@ -6,17 +6,25 @@ from typing import Literal, Optional, Union, Any
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema.output import GenerationChunk, ChatGenerationChunk
 
+# llm이 generating한 메세지를 streaming하기 위한 클래스들.
+
+
+"""
+Chat 클래스는 session_state에 정보를 저장하고 메세지 출력을 담당한다.
+따로 인스턴스를 만들 필요는 없기에 static method로 클래스를 구현.
+"""
+
 
 class Chat:
+
     @staticmethod
     def save_message(msg: str, role: Literal["ai", "human"]):
         if st.session_state['messages'] is None:
             st.session_state['messages'] = []
         st.session_state['messages'].append({
-                'text': msg,
-                'role': role,
-            })
-
+            'text': msg,
+            'role': role,
+        })
 
     @staticmethod
     def paint_messages():
@@ -25,11 +33,19 @@ class Chat:
                 Chat.send_message(message['text'], message['role'])
 
     @staticmethod
-    def send_message(msg: str, role: Literal["ai", "human"], save:bool=False):
+    def send_message(msg: str, role: Literal["ai", "human"],
+                     save: bool = False):
         with st.chat_message(role):
             st.markdown(msg)
         if save:
             Chat.save_message(msg, role)
+
+"""
+llm의 streaming을 담당하는 클래스.
+메세지가 generating 되기 전에 메세지가 생성 중이라는 메세지를 보여주고,
+메세지가 본격적으로 스트리밍 되면 메세지를 스트리밍해준다.
+"""
+
 
 class ChatCallbackHandler(BaseCallbackHandler):
     message = ""
