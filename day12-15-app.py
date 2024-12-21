@@ -99,6 +99,9 @@ def parse_json(output: str) -> dict:
 def on_click_clear():
     st.session_state.clear()
 
+def on_click_retry():
+    st.session_state['quiz'] = None
+
 
 @st.cache_data(show_spinner="Uploading file...")
 def retrieve_docs(uploaded_file: UploadedFile) -> Any:
@@ -225,7 +228,7 @@ if docs:
                 st.session_state['quiz'] = quiz
                 st.session_state['values'] = [None]*10
 
-    if st.session_state['quiz']:
+    if st.session_state['quiz'] is not None:
         with st.form("quiz_form"):
             quiz = st.session_state['quiz']
             for index, q in enumerate(quiz['quiz']):
@@ -247,7 +250,6 @@ if docs:
             else:
                 st.toast("Your score is {}/10.".format(right_answer))
                 st.error("You are {}/10.".format(right_answer))
-                button = st.button("Retry...")
-                if button:
-                    st.session_state['quiz'] = []
+                button = st.button("Retry...", on_click=on_click_retry)
+
 
