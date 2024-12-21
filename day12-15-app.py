@@ -122,7 +122,7 @@ def retrieve_docs(uploaded_file: UploadedFile) -> Any:
         )
         loader = UnstructuredFileLoader(file_path)
         split_doc = loader.load_and_split(text_splitter=splitter)
-        return split_doc
+        return split_doc, uploaded_file.name
 
 
 # prompt
@@ -152,6 +152,7 @@ question_prompt = ChatPromptTemplate.from_messages([
 
 @st.cache_data(show_spinner="Generating quiz....")
 def gen_quiz(_docs: list[Document],
+             file_name: str,
              difficulty: Literal["easy", "normal", "hard"]) -> dict|None:
     api_key = st.session_state['api_key']
     if not api_key:
@@ -207,7 +208,7 @@ with st.sidebar:
         file = st.file_uploader("Upload file...", type=["txt", "pdf", "docx"])
 
         if file:
-            docs = retrieve_docs(file)
+            docs, file_name = retrieve_docs(file)
 
 if docs:
     st.success("READY for making questions..")
@@ -224,7 +225,7 @@ if docs:
         if not st.session_state['quiz']:
             gen_button = st.button("Generate quiz..", type="primary", )
             if gen_button:
-                quiz = gen_quiz(docs, difficulty=difficulty, )
+                quiz = gen_quiz(docs, file_name, difficulty=difficulty, )
                 st.session_state['quiz'] = quiz
                 st.session_state['values'] = [None]*10
 
