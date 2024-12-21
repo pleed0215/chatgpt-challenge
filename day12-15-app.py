@@ -19,7 +19,7 @@ FILE_DIR = "./uploads/quizgpt/"
 if 'api_key' not in st.session_state:
     st.session_state['api_key'] = ''
 if 'quiz' not in st.session_state:
-    st.session_state['quiz'] = {}
+    st.session_state['quiz'] = None
 if 'values' not in st.session_state:
     st.session_state['values'] = []
 if 'right_answer' not in st.session_state:
@@ -231,6 +231,7 @@ if docs:
     if st.session_state['quiz'] is not None:
         with st.form("quiz_form"):
             quiz = st.session_state['quiz']
+            print(quiz)
             for index, q in enumerate(quiz['quiz']):
                 values[index] = st.radio(f"{index + 1}\. {q['question']}",
                                  [s for s in q['selections']], index=None, )
