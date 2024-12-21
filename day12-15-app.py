@@ -191,6 +191,7 @@ def gen_quiz(_docs: list[Document],
 
 
 with st.sidebar:
+    st.markdown("[🔗Github link](https://github.com/pleed0215/chatgpt-challenge/blob/main/day12-15-app.py)")
     text = st.text_input("Write your own OPEN_API_KEY. We won't save it",
                          key='api_key')
     st.button("Submit", use_container_width=True, )
