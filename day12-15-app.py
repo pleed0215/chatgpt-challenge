@@ -22,6 +22,8 @@ if 'quiz' not in st.session_state:
     st.session_state['quiz'] = {}
 if 'values' not in st.session_state:
     st.session_state['values'] = []
+if 'right_answer' not in st.session_state:
+    st.session_state['right_answer'] = None
 
 # function
 quiz_function = {
@@ -214,24 +216,24 @@ if docs:
 
     quiz = None
     values = [None]*10
-    print(st.session_state)
     if difficulty:
-        gen_button = st.button("Generate quiz..", type="primary", key='gen_button')
-        if gen_button:
-            quiz = gen_quiz(docs, difficulty=difficulty, )
-            st.session_state['quiz'] = quiz
+        if not st.session_state['quiz']:
+            gen_button = st.button("Generate quiz..", type="primary", )
+            if gen_button:
+                quiz = gen_quiz(docs, difficulty=difficulty, )
+                st.session_state['quiz'] = quiz
+                st.session_state['values'] = [None]*10
 
     if st.session_state['quiz']:
         with st.form("quiz_form"):
             quiz = st.session_state['quiz']
             for index, q in enumerate(quiz['quiz']):
                 values[index] = st.radio(f"{index + 1}\. {q['question']}",
-                                 [s for s in q['selections']], index=None, key=f'question_{index}')
+                                 [s for s in q['selections']], index=None, )
 
             submit_button = st.form_submit_button()
         if submit_button:
             st.session_state['values']= values
-            print(values)
             right_answer = 0
             for index, q in enumerate(quiz['quiz']):
                 print(values[index], q['answer'])
@@ -244,3 +246,7 @@ if docs:
             else:
                 st.toast("Your score is {}/10.".format(right_answer))
                 st.error("You are {}/10.".format(right_answer))
+                button = st.button("Retry...")
+                if button:
+                    st.session_state['quiz'] = []
+
