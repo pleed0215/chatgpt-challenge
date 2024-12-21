@@ -14,7 +14,7 @@ from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-from utils.logger import logger_factory
+from utils.baseapp import BaseApp
 from utils.st_cache import set_to_cache, get_from_cache, init_cache
 from utils.chat_stream import Chat, ChatCallbackHandler
 
@@ -23,7 +23,7 @@ CACHE_DIR = './.cache'
 UPLOAD_DIR = './uploads'
 
 # 로직 담당 앱 클래스.
-class App:
+class App(BaseApp):
     retriever = None
 
     prompt = ChatPromptTemplate.from_messages([
@@ -40,9 +40,9 @@ class App:
 
     def __init__(self):
         # 반드시 config를 먼저 호출해야 함. set_page_config 때문..
-        self.config()
-        self.logger = logger_factory("AppLogger")
-        self.init_cache()
+        super().__init__(name="DocumentGPT",
+                         title="Chatgpt challenge Day9-11",
+                         icon="🤖")
 
     def config(self):
         st.set_page_config(

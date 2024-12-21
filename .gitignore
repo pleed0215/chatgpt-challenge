@@ -5,6 +5,8 @@
 chatgpt-challenge/
 venv/
 .cache/
+uploads/
+documents/
 
 # User-specific stuff
 .idea/**/workspace.xml
