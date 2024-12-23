@@ -26,23 +26,24 @@ UPLOAD_DIR = './uploads'
 class App(BaseApp):
     retriever = None
 
-    prompt = ChatPromptTemplate.from_messages([
-        ('system', """
-                You are good at replying users questions based on below context.\n\n
-                Beware you have to answer base on the context.
-                If you got question before user asked in chat_history, just reply that.
-                context: {context},
-                ------
-                """),
-        MessagesPlaceholder(variable_name='chat_history'),
-        ('human', '{question}'),
-    ])
+
 
     def __init__(self):
         # 반드시 config를 먼저 호출해야 함. set_page_config 때문..
         super().__init__(name="DocumentGPT",
                          title="Chatgpt challenge Day9-11",
                          icon="🤖")
+        self.prompt = ChatPromptTemplate.from_messages([
+            ('system', """
+                       You are good at replying users questions based on below context.\n\n
+                       Beware you have to answer base on the context.
+                       If you got question before user asked in chat_history, just reply that.
+                       context: {context},
+                       ------
+                       """),
+            MessagesPlaceholder(variable_name='chat_history'),
+            ('human', '{question}'),
+        ])
 
     def config(self):
         st.set_page_config(
@@ -111,19 +112,20 @@ class App(BaseApp):
             if not memory or not llm:
                 self.logger.error("Memory or LLM not initialized.")
                 return None
-
+            print(self.prompt)
             chain = {"question": RunnablePassthrough(),
                      "context": self.retriever,
                      'chat_history': RunnableLambda(
                          lambda _: memory.load_memory_variables({})[
                              'chat_history'])} | self.prompt | llm
-
             answer = chain.invoke(question)
+            print("Hello2")
             self.logger.info('ai answered: {}'.format(answer.content))
+            print("Hello3")
 
             return answer.content
         except Exception as e:
-            st.toast(e, icon="😵")
+            st.toast(e.with_traceback(None), icon="😵")
             self.logger.error('Failed to generate answer...{}'.format(e))
             return None
 
