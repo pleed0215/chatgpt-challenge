@@ -140,7 +140,7 @@ def submit_tool_output(run_id, thread_id):
     )
 
 with st.sidebar:
-    st.markdown("[🔗Github link](https://github.com/pleed0215/chatgpt-challenge/blob/main/day16-17-app.py)")
+    st.markdown("[🔗Github link](https://github.com/pleed0215/chatgpt-challenge/blob/main/final-app.py)")
     text = st.text_input("Write your own OPEN_API_KEY. We won't save it",
                          key='api_key')
     st.button("Submit", use_container_width=True, )
