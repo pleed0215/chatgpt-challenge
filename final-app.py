@@ -52,12 +52,29 @@ def retrieve_assistant(api_key):
         assistant = client.beta.assistants.create(
             name="Research Assistant",
             instructions="""
-                  You are expert in researching ai.
-                  Your job is getting core keyword, and searching it in web, scraping those websites, and saving the result to text file.
-                  First, Given subject from user, you search that in Duckduckgo.
-                  Next step, you will find wikipedia document from above searching keyword.
-                  If you find any link in duckduckgo, scrape the webpage.
-                  Last step, you will summary it and save it.
+You are a research assistant specializing in AI and information scraping. 
+Your job is to extract core keywords from a given subject, perform a structured web search, collect information from multiple sources, and summarize the findings coherently. 
+Follow these steps strictly: First, extract the core keyword (and any related subtopics) from the given subject. Next, search the core keyword on DuckDuckGo to find web pages related to the subject. 
+Specifically, look for a Wikipedia page relevant to the keyword during the DuckDuckGo search and open it, using the contents of the Wikipedia page as a primary source. 
+From the Wikipedia page, extract the main information and also identify related subtopics or linked pages that add further context. 
+Collect additional information from these subpages to expand the research content. 
+Then, simultaneously scrape relevant information from other web pages found in DuckDuckGo's results and consolidate the data with the findings from Wikipedia. 
+After you have collected data from both primary (Wikipedia) and secondary sources (other websites), proceed to summarize the information in a coherent and concise format. 
+Create a title for the research based on the subject, and format your output as follows: 
+Title: [Insert the research subject here], followed by a horizontal line (-------), and then the summary content. 
+For example: 
+"Research on Climate Change in the Arctic 
+------- 
+The Arctic is one of the regions most vulnerable to climate change, experiencing...". 
+Ensure the summary integrates key insights from the subtopics identified earlier. 
+And the summary has to be as detail as.
+Once the summary is complete, save it in the format: 
+"[Subject Title: Summary Content]". 
+Do not perform any unnecessary actions after the summary is compiled. 
+Focus on comprehensive and concise reporting to avoid redundant searches or errors.                
+Finally, you will save the summary as a .txt file. 
+You must finish with saving the summary file to a .txt file.
+Do not complete until summary and save file tool be called.
                   """,
             model='gpt-4o-mini',
             temperature=0.5,
@@ -144,7 +161,7 @@ if st.session_state['api_key']:
     )
 
     chat_message = st.chat_input(
-        "Ask anything about cloudflare ai-gateway, vectorize, workers-ai...",
+        "Write any subject you want research...",
     )
     Chat.paint_messages()
     if chat_message:
@@ -152,34 +169,29 @@ if st.session_state['api_key']:
             chat_message, role='human', save=True
         )
 
-        with st.chat_message('ai'):
-            assistant = st.session_state['assistant']
-            thread = st.session_state['thread']
-            if not thread:
-                thread = client.beta.threads.create(
-                     messages=[
-                         {
-                             "role": "user",
-                             "content": chat_message,
-                         }
-                     ]
-                 )
-                st.session_state['thread'] = thread
-            run = client.beta.threads.runs.create(
-                thread_id=thread.id,
-                assistant_id=assistant.id,
-            )
-            wait_on_run(run, thread)
-            thread_messages = get_messages(thread.id)
-            run = get_run(run.id, thread.id)
-            st.write(thread_messages)
-            st.write(run.status)
-            run_result = submit_tool_output(run.id, thread.id)
-            wait_on_run(run_result, thread)
-            run_result = get_run(run_result.id, thread.id)
-            st.write(get_messages(thread.id))
-            st.write(run_result.status)
-            wait_on_run(run_result, thread)
-            st.write(run_result.status)
-            st.write(get_messages(thread.id))
-        st.session_state.update(question=None)
+        assistant = st.session_state['assistant']
+        thread = st.session_state['thread']
+        if not thread:
+            thread = client.beta.threads.create(
+                 messages=[
+                     {
+                         "role": "user",
+                         "content": chat_message,
+                     }
+                 ]
+             )
+            st.session_state['thread'] = thread
+
+        run = client.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=assistant.id,
+        )
+        run_result = wait_on_run(run, thread)
+        while run_result.status == 'requires_action':
+            action_result = submit_tool_output(run_result.id, thread.id)
+            run_result = wait_on_run(action_result, thread)
+        if run_result.status == 'completed':
+            client.beta.threads.delete(thread_id=thread.id)
+            st.toast("Thread initialized")
+            st.session_state['thread'] = None
+
